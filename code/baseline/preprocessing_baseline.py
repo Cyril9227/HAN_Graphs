@@ -14,14 +14,14 @@ def atoi(text):
 def natural_keys(text):
     return [atoi(c) for c in re.split('(\d+)', text)]
 
-def random_walk(graph,node,walk_length):
+def random_walk(graph, node, walk_length):
     walk = [node]
     for i in range(walk_length):
         neighbors = graph.neighbors(walk[i])
         walk.append(random.choice(list(neighbors)))
     return walk
 
-def generate_walks(graph,num_walks,walk_length):
+def generate_walks(graph, num_walks, walk_length):
     '''
     samples num_walks walks of length walk_length+1 from each node of graph
     '''
@@ -44,7 +44,7 @@ num_walks = 5
 walk_length = 10
 max_doc_size = 70 # maximum number of 'sentences' (walks) in each pseudo-document
 
-path_root = # fill me!
+path_root = os.path.dirname(os.path.dirname(os.path.abspath('').replace('\\', '/')))
 path_to_data = path_root + '/data/'
 
 # = = = = = = = = = = = = = = =
@@ -57,12 +57,12 @@ def main():
     edgelists.sort(key=natural_keys) # important to maintain alignment with the targets!
 
     docs = []
-    for idx,edgelist in enumerate(edgelists):
+    for idx, edgelist in enumerate(edgelists):
         g = nx.read_edgelist(path_to_data + 'edge_lists/' + edgelist) # construct graph from edgelist
-        doc = generate_walks(g,num_walks,walk_length) # create the pseudo-document representation of the graph
+        doc = generate_walks(g, num_walks, walk_length) # create the pseudo-document representation of the graph
         docs.append(doc)
         
-        if idx % round(len(edgelists)/10) == 0:
+        if idx % round(len(edgelists) / 10) == 0:
             print(idx)
 
     print('documents generated')
@@ -71,12 +71,12 @@ def main():
     docs = [d+[[pad_vec_idx]*(walk_length+1)]*(max_doc_size-len(d)) if len(d)<max_doc_size else d[:max_doc_size] for d in docs] 
 
     docs = np.array(docs).astype('int')
-    print('document array shape:',docs.shape)
+    print('document array shape:', docs.shape)
 
     np.save(path_to_data + 'documents.npy', docs, allow_pickle=False)
 
     print('documents saved')
-    print('everything done in', round(time() - start_time,2))
+    print('everything done in', round(time() - start_time, 2), 's')
 
 # = = = = = = = = = = = = = = =
 

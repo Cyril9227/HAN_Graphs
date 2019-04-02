@@ -18,8 +18,8 @@ save_weights = True
 save_history = False
 np.random.seed(1997)
 
-path_root = 'D:/Scolaire/Code/Python/Machine_Learning/Kaggle_Challenges_M2/Altegrad'
-path_to_code = path_root + '/code/'
+path_root = os.path.dirname(os.path.dirname(os.path.abspath('').replace('\\', '/')))
+path_to_code = path_root + '/repo/code'
 path_to_data = path_root + '/data/'
 
 sys.path.insert(0, path_to_code)
