@@ -9,7 +9,7 @@ import keras.backend as K
  
 from keras.models import Model
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.layers import Input, Embedding, Dropout, Bidirectional, GRU, CuDNNGRU, TimeDistributed, Dense, Flatten, Lambda
+from keras.layers import Input, Embedding, Dropout, Bidirectional, GRU, CuDNNGRU, TimeDistributed, Dense, Flatten, Lambda, BatchNormalization
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -55,8 +55,6 @@ def make_model(n_units, drop_rate, embeddings, docs_train, is_GPU):
     is_GPU : boolean, wether we're using gpu or not
     
     '''
-    # because of concat mode
-    n_units_dense = n_units * 2
     
     sent_ints = Input(shape=(docs_train.shape[2], ))
 
@@ -67,19 +65,19 @@ def make_model(n_units, drop_rate, embeddings, docs_train, is_GPU):
                         trainable=False,
                         )(sent_ints)
     
+    sent_wv = Dropout(0.1)(sent_wv)
     sent_wa = bidir_gru(sent_wv, n_units, is_GPU)
-    sent_wa = TimeDistributed(Dense(n_units_dense))(sent_wa)
+    senta_wa = BatchNormalization()(sent_wa)
     sent_att_vec = AttentionWithContext()(sent_wa)
     sent_att_vec_dr = Dropout(drop_rate)(sent_att_vec) 
-    sent_att_vec_dr = Dense(n_units)(sent_att_vec_dr)
     sent_encoder = Model(sent_ints, sent_att_vec_dr)
 
     doc_ints = Input(shape=(docs_train.shape[1], docs_train.shape[2], ))
     sent_att_vecs_dr = TimeDistributed(sent_encoder)(doc_ints)
     doc_sa = bidir_gru(sent_att_vecs_dr, n_units, is_GPU)
+    doc_sa = BatchNormalization()(doc_sa)
     doc_att_vec = AttentionWithContext()(doc_sa)
     doc_att_vec_dr = Dropout(drop_rate)(doc_att_vec)
-    doc_att_vec_dr = Dense(n_units)(doc_att_vec_dr)
     preds = Dense(units=1)(doc_att_vec_dr)
     model = Model(doc_ints, preds)
    
