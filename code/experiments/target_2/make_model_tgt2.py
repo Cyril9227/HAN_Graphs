@@ -67,7 +67,7 @@ def make_model(n_units, drop_rate, embeddings, docs_train, is_GPU):
     
     sent_wv = Dropout(0.1)(sent_wv)
     sent_wa = bidir_gru(sent_wv, n_units, is_GPU)
-    senta_wa = BatchNormalization()(sent_wa)
+    sent_wa = BatchNormalization()(sent_wa)
     sent_att_vec = AttentionWithContext()(sent_wa)
     sent_att_vec_dr = Dropout(drop_rate)(sent_att_vec) 
     sent_encoder = Model(sent_ints, sent_att_vec_dr)
