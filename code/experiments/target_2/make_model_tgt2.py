@@ -3,7 +3,7 @@ import json
 import numpy as np
 
 
-from AttentionWithContext import AttentionWithContext
+from AttentionWithContextCustom import AttentionWithContext
 
 import keras.backend as K
  
@@ -29,7 +29,7 @@ def bidir_gru(my_seq, n_units, is_GPU, drop_rate=0, rec_drop_rate=0):
     '''
     if is_GPU:
         return Bidirectional(CuDNNGRU(units=n_units, return_sequences=True),
-                             merge_mode='concat', 
+                             merge_mode='sum', 
                              weights=None)(my_seq)
     else:
         return Bidirectional(GRU(units=n_units,
@@ -43,13 +43,16 @@ def bidir_gru(my_seq, n_units, is_GPU, drop_rate=0, rec_drop_rate=0):
                                  merge_mode='concat', weights=None)(my_seq)
 
 
-def make_model(n_units, drop_rate, embeddings, docs_train, is_GPU):
+def make_model(n_units, drop_rate, drop_rate_emb, att_cosine, att_activation, embeddings, docs_train, is_GPU):
     
     '''
     Convenient wrapper for generating same model for training and inference 
     
-    n_units : number of units in bidirectional GRU layer
-    drop_rate : dropout rate (set to 0 at inference time)
+    n_units : int, number of units in bidirectional GRU layer
+    drop_rate : float, dropout rate (set to 0 at inference time)
+    drop_rate_emb : float, dropout rate after the embedding layer (set to 0 at inference time)
+    att_cosine : boolean, use cosine similarity instead of unormalized dot product for attention mechanism
+    att_activation : [None, 'tanh', 'sigmoid'], activation used in the dense layer for attention mechanism
     embeddings : embedding matrix
     docs_train : training documents
     is_GPU : boolean, wether we're using gpu or not
@@ -65,10 +68,10 @@ def make_model(n_units, drop_rate, embeddings, docs_train, is_GPU):
                         trainable=False,
                         )(sent_ints)
     
-    sent_wv = Dropout(0.1)(sent_wv)
+    sent_wv = Dropout(drop_rate_emb)(sent_wv)
     sent_wa = bidir_gru(sent_wv, n_units, is_GPU)
     sent_wa = BatchNormalization()(sent_wa)
-    sent_att_vec = AttentionWithContext()(sent_wa)
+    sent_att_vec = AttentionWithContext(att_cosine, att_activation)(sent_wa)
     sent_att_vec_dr = Dropout(drop_rate)(sent_att_vec) 
     sent_encoder = Model(sent_ints, sent_att_vec_dr)
 
@@ -76,7 +79,7 @@ def make_model(n_units, drop_rate, embeddings, docs_train, is_GPU):
     sent_att_vecs_dr = TimeDistributed(sent_encoder)(doc_ints)
     doc_sa = bidir_gru(sent_att_vecs_dr, n_units, is_GPU)
     doc_sa = BatchNormalization()(doc_sa)
-    doc_att_vec = AttentionWithContext()(doc_sa)
+    doc_att_vec = AttentionWithContext(att_cosine, att_activation)(doc_sa)
     doc_att_vec_dr = Dropout(drop_rate)(doc_att_vec)
     preds = Dense(units=1)(doc_att_vec_dr)
     model = Model(doc_ints, preds)

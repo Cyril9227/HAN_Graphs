@@ -12,7 +12,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 is_GPU = True
 save_hist = False
-path_root = 'D:/Scolaire/Code/Python/Machine_Learning/Kaggle_Challenges_M2/Altegrad'
+path_root = os.path.dirname(os.path.abspath('').replace('\\', '/'))
 path_to_data = path_root + '/data/'
 path_to_code = path_root + '/code/'
 sys.path.insert(0, path_to_code)
@@ -20,7 +20,7 @@ sys.path.insert(0, path_to_code)
 # = = = = = = = = = = = = = = =
 
 from AttentionWithContext import AttentionWithContext
-from make_model import make_model
+from make_model_layers import make_model
 # = = = = = = = = = = = = = = =
 
 docs = np.load(path_to_data + 'documents.npy')
@@ -79,12 +79,8 @@ for tgt in range(4):
     # relevant hyper-parameters
     n_units = 60
     drop_rate = 0 # prediction mode
-    
-    if tgt == 2:
-        model = make_model(80, 0, embeddings, docs_test, is_GPU)
  
-    else:
-        model = make_model(n_units, drop_rate, embeddings, docs_test, is_GPU)
+    model = make_model(n_units, drop_rate, embeddings, docs_test, is_GPU)
     
     model.load_weights(path_to_data + 'model_' + str(tgt))
     all_preds_han.append(model.predict(docs_test).tolist())
