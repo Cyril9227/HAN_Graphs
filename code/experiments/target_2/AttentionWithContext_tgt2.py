@@ -43,24 +43,28 @@ class AttentionWithContext(Layer):
         # next add a Dense layer (for classification/regression) or whatever...
     """
     
-    def __init__(self, att_cosine, att_activation, return_coefficients=False,
+    def __init__(self, att_cosine, att_activation, fc_layer,
+                 return_coefficients=False,
                  W_regularizer=None, u_regularizer=None, b_regularizer=None,
                  W_constraint=None, u_constraint=None, b_constraint=None,
                  bias=True, **kwargs):
         
         self.supports_masking = True
         self.return_coefficients = return_coefficients
+        self.use_fc_layer = fc_layer
         self.init = initializers.get('glorot_uniform')
-        
-        self.W_regularizer = regularizers.get(W_regularizer)
-        self.u_regularizer = regularizers.get(u_regularizer)
-        self.b_regularizer = regularizers.get(b_regularizer)
-        
-        self.W_constraint = constraints.get(W_constraint)
         self.u_constraint = constraints.get(u_constraint)
-        self.b_constraint = constraints.get(b_constraint)
+        self.u_regularizer = regularizers.get(u_regularizer)
         
-        self.bias = bias
+        if self.use_fc_layer:
+            self.W_regularizer = regularizers.get(W_regularizer)
+            self.b_regularizer = regularizers.get(b_regularizer)
+
+            self.W_constraint = constraints.get(W_constraint)
+            self.b_constraint = constraints.get(b_constraint)
+
+            self.bias = bias
+            
         self.cosine = att_cosine
         assert att_activation in [None, 'tanh', 'sigmoid']
         self.activation = att_activation
@@ -69,17 +73,18 @@ class AttentionWithContext(Layer):
     def build(self, input_shape):
         assert len(input_shape) == 3
         
-        self.W = self.add_weight((input_shape[-1], input_shape[-1],),
-                                 initializer=self.init,
-                                 name='{}_W'.format(self.name),
-                                 regularizer=self.W_regularizer,
-                                 constraint=self.W_constraint)
-        if self.bias:
-            self.b = self.add_weight((input_shape[-1],),
-                                     initializer='zero',
-                                     name='{}_b'.format(self.name),
-                                     regularizer=self.b_regularizer,
-                                     constraint=self.b_constraint)
+        if self.use_fc_layer:
+            self.W = self.add_weight((input_shape[-1], input_shape[-1],),
+                                     initializer=self.init,
+                                     name='{}_W'.format(self.name),
+                                     regularizer=self.W_regularizer,
+                                     constraint=self.W_constraint)
+            if self.bias:
+                self.b = self.add_weight((input_shape[-1],),
+                                         initializer='zero',
+                                         name='{}_b'.format(self.name),
+                                         regularizer=self.b_regularizer,
+                                         constraint=self.b_constraint)
         
         self.u = self.add_weight((input_shape[-1],),
                                  initializer=self.init,
@@ -95,26 +100,40 @@ class AttentionWithContext(Layer):
         return None
     
     def call(self, x, mask=None):
+#     # x a tensor representing the words or sentences annotations with input shape
+#         3D tensor with shape: `(samples, steps, features)`.
+#     # Output shape
+#         2D tensor with shape: `(samples, features)`.
+    
+#     Depending on the hyperparameters it will perform different kind of attention mechanisms : dense layer with tanh / sigmoid / linear
+#     activation then an unormalized dot product / cosine similarity fed to a softmax function or only unormalized dot product / cosine
+#     similarity without the fully connected layer fed to a softmax function
 
-        uit = dot_product(x, self.W)
-        
-        if self.bias:
-            uit += self.b
-            
-        if self.activation == 'tanh':
-            uit = K.tanh(uit)
-        elif self.activation == 'sigmoid':
-            uit = K.sigmoid(uit)
+        if self.use_fc_layer:
+            # feed the input into a dense layer
+            uit = dot_product(x, self.W)
+            if self.bias:
+                
+                uit += self.b
+
+            if self.activation == 'tanh':
+                uit = K.tanh(uit)
+            elif self.activation == 'sigmoid':
+                uit = K.sigmoid(uit)
+        else:
+            uit = x
 
         if self.cosine:
+            # similarity is computed as the cosine sim between uit and the context vector u
             uit = K.l2_normalize(uit, axis=-1)
             self.u = K.l2_normalize(self.u, axis=-1)
-            ait = -K.mean(uit * self.u)
+            ait = dot_product(uit, self.u)
  
         else:
+            # similarity is computed as an unormalized dot product between uit and the context vector u
             ait = dot_product(uit, self.u)
 
-
+        # The similarity is then fed to a softmax function to compute weights
         a = K.exp(ait)
         # apply mask after the exp. will be re-normalized next
         if mask is not None:
@@ -126,7 +145,6 @@ class AttentionWithContext(Layer):
         # and this results in NaN's. A workaround is to add a very small positive number ε to the sum.
 
         a /= K.cast(K.sum(a, axis=1, keepdims=True) + K.epsilon(), K.floatx())
-       
         a = K.expand_dims(a)
         
         weighted_input = x * a 
