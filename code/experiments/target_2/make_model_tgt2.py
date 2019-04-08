@@ -1,4 +1,9 @@
-from AttentionWithContext_tgt2 import AttentionWithContext
+import os
+import sys
+path_root = os.path.dirname(os.path.abspath('').replace('\\', '/'))
+sys.path.insert(0, path_root)
+
+from AttentionWithContextCustom import AttentionWithContext
 
 from keras.models import Model
 from keras.layers import Input, Embedding, Dropout, BatchNormalization, Bidirectional, GRU, CuDNNGRU, TimeDistributed, Dense
@@ -39,8 +44,7 @@ def make_model(n_units, merge_mode, drop_rate, drop_rate_emb, att_cosine, att_ac
     Convenient wrapper for generating same model for training and inference 
     
     n_units : int, number of units in bidirectional GRU layer
-    merge_mode : ['sum', 'mul', 'concat', 'ave', None] Mode by which outputs of the forward and backward RNNs will be combined. If None, 
-    the outputs will not be combined, they will be returned as a list.
+    merge_mode : ['sum', 'mul', 'concat', 'ave', None] Mode by which outputs of the forward and backward RNNs will be combined. 
     drop_rate : float, dropout rate (set to 0 at inference time)
     drop_rate_emb : float, dropout rate after the embedding layer (set to 0 at inference time)
     att_cosine : boolean, use cosine similarity instead of unormalized dot product for attention mechanism
@@ -74,9 +78,8 @@ def make_model(n_units, merge_mode, drop_rate, drop_rate_emb, att_cosine, att_ac
     doc_att_vec = AttentionWithContext(att_cosine, att_activation, use_fc_layer)(doc_sa)
     doc_att_vec_dr = Dropout(drop_rate)(doc_att_vec)
     preds = Dense(units=1)(doc_att_vec_dr)
-    model = Model(doc_ints, preds)
-   
-    return model
+ 
+    return Model(doc_ints, preds)
     
     
     

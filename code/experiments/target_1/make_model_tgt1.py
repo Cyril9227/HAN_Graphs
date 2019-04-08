@@ -1,18 +1,14 @@
+import os
 import sys
-import json
-import numpy as np
+path_root = os.path.dirname(os.path.abspath('').replace('\\', '/'))
+sys.path.insert(0, path_root)
 
-
-from AttentionWithContext import AttentionWithContext
-
-import keras.backend as K
+from AttentionWithContextCustom import AttentionWithContext
  
 from keras.models import Model
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Input, Embedding, Dropout, Bidirectional, GRU, CuDNNGRU, TimeDistributed, Dense, Flatten, Lambda
 
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 ##############################################################################################################################
 #

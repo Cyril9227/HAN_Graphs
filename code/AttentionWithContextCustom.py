@@ -113,24 +113,23 @@ class AttentionWithContext(Layer):
             # feed the input into a dense layer
             uit = dot_product(x, self.W)
             if self.bias:
-                
                 uit += self.b
-
             if self.activation == 'tanh':
                 uit = K.tanh(uit)
             elif self.activation == 'sigmoid':
                 uit = K.sigmoid(uit)
+                
         else:
             uit = x
 
         if self.cosine:
-            # similarity is computed as the cosine sim between uit and the context vector u
+            # similarity is computed as the cosine sim between uit (layer's input or MLP output) and the context vector u
             uit = K.l2_normalize(uit, axis=-1)
             self.u = K.l2_normalize(self.u, axis=-1)
             ait = dot_product(uit, self.u)
  
         else:
-            # similarity is computed as an unormalized dot product between uit and the context vector u
+            # similarity is computed as an unormalized dot product between uit (layer's input or MLP output) and the context vector u
             ait = dot_product(uit, self.u)
 
         # The similarity is then fed to a softmax function to compute weights
@@ -140,7 +139,6 @@ class AttentionWithContext(Layer):
             # Cast the mask to floatX to avoid float64 upcasting in theano
             a *= K.cast(mask, K.floatx())
             
-        
         # in some cases especially in the early stages of training the sum may be almost zero
         # and this results in NaN's. A workaround is to add a very small positive number ε to the sum.
 
