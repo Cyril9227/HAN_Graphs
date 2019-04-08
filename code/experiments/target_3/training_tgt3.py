@@ -2,9 +2,7 @@ import sys
 import json
 import numpy as np
 
-from keras.models import Model
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.layers import Input, Embedding, Dropout, Bidirectional, GRU, CuDNNGRU, TimeDistributed, Dense
 
 from make_model_attention import make_model
 
@@ -27,7 +25,8 @@ sys.path.insert(0, path_to_code)
 
 # = = = = = data loading = = = = =
 
-docs = np.load(path_to_data + 'documents_0.npy')
+# Use documents adapted for target 3
+docs = np.load(path_to_data + 'documents_3.npy')
 embeddings = np.load(path_to_data + 'embeddings.npy')
 
 with open(path_to_data + 'train_idxs.txt', 'r') as file:

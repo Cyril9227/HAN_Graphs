@@ -5,12 +5,8 @@ sys.path.insert(0, path_root)
 
 from AttentionWithContextCustom import AttentionWithContext
 
-
 from keras.models import Model
-from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.layers import Input, Embedding, Dropout, Bidirectional, GRU, CuDNNGRU, TimeDistributed, Dense, Flatten, Lambda
-
-
+from keras.layers import Input, Embedding, Dropout, Bidirectional, GRU, CuDNNGRU, TimeDistributed, Dense
 
 ##############################################################################################################################
 #

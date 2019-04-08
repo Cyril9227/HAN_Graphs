@@ -12,13 +12,17 @@ def atoi(text):
 
 def natural_keys(text):
     return [atoi(c) for c in re.split('(\d+)', text)]
-# = = = = = = = = = = = = = = =
-    
 # = = = = = = = = = = = = = = = 
-# documents padding to match maximum words by sentence and sentences by doc
+
 def pad_docs(docs, sent_max, l_max):
+    '''
+    documents padding to match maximum words by sentence and sentences by doc
+    sent_max: maximum number of sentences by documents
+    l_max: maximum number of words by sentence
+    '''
     # sentence padding
     docs = [d+[[pad_vec_idx]*(l_max)]*(sent_max-len(d)) if len(d)<sent_max else d[:sent_max] for d in docs]
+    # word padding
     for d in docs:
         for i in range(len(d)):
             d[i] = d[i] + [pad_vec_idx]*(l_max-len(d[i])) if len(d[i]) < l_max else d[i][:l_max]
@@ -35,7 +39,7 @@ path_to_data = path_root + '/data/'
 
 def create_documents(target, sent_max, sent_l_law, sent_l_stats, word_rate, p, q):
     '''
-    target: 0 to 3: number of target for which we want to use the embedded docs
+    target: 0 to 3: number of the target for which we want to use the embedded docs
     sent_max: maximum number of sentences in produced documents
     sent_l_law: 'uniform' or 'normal' => the distribution to follow when generating random sentence length
     sent_l_stats: the interval of lengths if uniform, mean and std if normal distribution
@@ -55,6 +59,7 @@ def create_documents(target, sent_max, sent_l_law, sent_l_stats, word_rate, p, q
         g = Graph(nx.read_edgelist(path_to_data + 'edge_lists/' + edgelist), p, q) 
         g.preprocess_transition_probs()
         
+        # get document as a biased random walk (similar to node2vec sampling)
         doc = g.simulate_walks(word_rate, sent_l_law, sent_l_stats)
         
         # create the pseudo-document representation of the graph

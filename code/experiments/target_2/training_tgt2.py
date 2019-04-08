@@ -2,11 +2,8 @@ import sys
 import json
 import numpy as np
 
-
-from keras.models import Model
-from keras.optimizers import SGD, Nadam
+from keras.optimizers import Nadam
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.layers import Input, Embedding, Dropout, Bidirectional, GRU, CuDNNGRU, TimeDistributed, Dense
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -21,9 +18,6 @@ path_to_data = path_root + '/data/'
 path_to_code = path_root + '/code/experiments/target_' + str(tgt) + '/'
 sys.path.insert(0, path_to_code)
 
-# = = = = = = = = = = = = = = =
-
-from AttentionWithContext import AttentionWithContext
 from make_model_tgt2 import make_model
 
 # = = = = = hyper-parameters = = = = =
@@ -38,6 +32,7 @@ my_patience = 6
 
 # = = = = = data loading = = = = =
 
+# Use baseline sampled documents
 docs = np.load(path_to_data + 'documents.npy')
 embeddings = np.load(path_to_data + 'embeddings.npy')
 

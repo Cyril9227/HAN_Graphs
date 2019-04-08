@@ -45,7 +45,7 @@ class Graph():
             
         return walk
 
-    def simulate_walks(self, num_walks, length_i):
+    def simulate_walks(self, num_walks, law, length_d):
         '''
         Repeatedly simulate random walks from each node.
         '''
@@ -57,7 +57,9 @@ class Graph():
             # For each node (not always the same first, random order)
             random.shuffle(nodes)
             for node in nodes:
-                walk_length = random.randint(length_i[0], length_i[1])
+                # The length of the walk follows the provided distribution
+                dist = random.randint if law == 'uniform' else random.normalvariate
+                walk_length = int(dist(length_d[0], length_d[1]))
                 # Perform from the node a random walk of given length, biased by pi
                 walks.append(self.node2vec_walk(walk_length=walk_length, start_node=node))
                 
@@ -113,6 +115,7 @@ def alias_setup(probs):
     Compute utility lists for non-uniform sampling from discrete distributions.
     Refer to https://hips.seas.harvard.edu/blog/2013/03/03/the-alias-method-efficient-sampling-with-many-discrete-outcomes/
     for details
+    => Permits O(1) random draws after this setup
     '''
     K = len(probs)
     q = np.zeros(K)

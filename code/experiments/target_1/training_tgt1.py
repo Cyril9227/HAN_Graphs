@@ -2,9 +2,7 @@ import sys
 import json
 import numpy as np
 
-from keras.models import Model
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.layers import Input, Embedding, Dropout, Bidirectional, GRU, CuDNNGRU, TimeDistributed, Dense
 
 from make_model_attention import make_model
 
@@ -27,6 +25,7 @@ sys.path.insert(0, path_to_code)
 
 # = = = = = data loading = = = = =
 
+# Use baseline sampled documents
 docs = np.load(path_to_data + 'documents.npy')
 embeddings = np.load(path_to_data + 'embeddings.npy')
 
