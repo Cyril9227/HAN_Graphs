@@ -16,7 +16,7 @@ from keras.layers import Input, Embedding, Dropout, Bidirectional, GRU, CuDNNGRU
 #
 ##############################################################################################################################
 
-def bidir_gru(my_seq, n_units, is_GPU, drop_rate=0, rec_drop_rate=0):
+def bidir_gru(my_seq, n_units, is_GPU,  merge_mode='concat'):
     '''
     Just a convenient wrapper for bidirectional RNN with GRU units
     enables CUDA acceleration on GPU
@@ -25,13 +25,13 @@ def bidir_gru(my_seq, n_units, is_GPU, drop_rate=0, rec_drop_rate=0):
     '''
     if is_GPU:
         return Bidirectional(CuDNNGRU(units=n_units, return_sequences=True),
-                             merge_mode='sum', 
+                             merge_mode=merge_mode, 
                              weights=None)(my_seq)
     else:
         return Bidirectional(GRU(units=n_units,
                                  activation='tanh', 
-                                 dropout=drop_rate,
-                                 recurrent_dropout=rec_drop_rate,
+                                 dropout=0.,
+                                 recurrent_dropout=0.,
                                  implementation=1,
                                  return_sequences=True,
                                  reset_after=True,
@@ -39,17 +39,21 @@ def bidir_gru(my_seq, n_units, is_GPU, drop_rate=0, rec_drop_rate=0):
                                  merge_mode='concat', weights=None)(my_seq)
 
 
-def make_model(n_units, drop_rate, embeddings, docs_train, is_GPU):
+def make_model(n_units, merge_mode, drop_rate, drop_rate_emb, att_cosine, att_activation, use_fc_layer, embeddings, docs_train, is_GPU):
     
     '''
     Convenient wrapper for generating same model for training and inference 
     
-    n_units : number of units in bidirectional GRU layer
-    drop_rate : dropout rate (set to 0 at inference time)
+    n_units : int, number of units in bidirectional GRU layer
+    merge_mode : ['sum', 'mul', 'concat', 'ave', None] Mode by which outputs of the forward and backward RNNs will be combined. 
+    drop_rate : float, dropout rate (set to 0 at inference time)
+    drop_rate_emb : float, dropout rate after the embedding layer (set to 0 at inference time)
+    att_cosine : boolean, use cosine similarity instead of unormalized dot product for attention mechanism
+    att_activation : [None, 'tanh', 'sigmoid'], activation used in the dense layer for attention mechanism
+    use_fc_layer : boolean, whether to use a dense layer for attention mechanism
     embeddings : embedding matrix
     docs_train : training documents
     is_GPU : boolean, wether we're using gpu or not
-    
     '''
     # because of concat mode
     n_units_dense = n_units * 2
@@ -65,7 +69,7 @@ def make_model(n_units, drop_rate, embeddings, docs_train, is_GPU):
     
     sent_wa = bidir_gru(sent_wv, n_units, is_GPU)
     sent_wa = TimeDistributed(Dense(n_units_dense))(sent_wa)
-    sent_att_vec = AttentionWithContext()(sent_wa)
+    sent_att_vec = AttentionWithContext(att_cosine, att_activation, use_fc_layer)(sent_wa)
     sent_att_vec_dr = Dropout(drop_rate)(sent_att_vec) 
     sent_att_vec_dr = Dense(n_units)(sent_att_vec_dr)
     sent_encoder = Model(sent_ints, sent_att_vec_dr)
@@ -73,7 +77,7 @@ def make_model(n_units, drop_rate, embeddings, docs_train, is_GPU):
     doc_ints = Input(shape=(docs_train.shape[1], docs_train.shape[2], ))
     sent_att_vecs_dr = TimeDistributed(sent_encoder)(doc_ints)
     doc_sa = bidir_gru(sent_att_vecs_dr, n_units, is_GPU)
-    doc_att_vec = AttentionWithContext()(doc_sa)
+    doc_att_vec = AttentionWithContext(att_cosine, att_activation, use_fc_layer)(doc_sa)
     doc_att_vec_dr = Dropout(drop_rate)(doc_att_vec)
     doc_att_vec_dr = Dense(n_units)(doc_att_vec_dr)
     preds = Dense(units=1)(doc_att_vec_dr)
