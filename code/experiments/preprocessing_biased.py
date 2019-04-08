@@ -33,7 +33,7 @@ pad_vec_idx = 1685894 # 0-based index of the last row of the embedding matrix (f
 
 # = = = = = = = = = = = = = = =
 ### Paths
-path_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath('').replace('\\', '/'))))
+path_root = os.path.dirname(os.path.abspath('').replace('\\', '/'))
 path_to_data = path_root + '/data/'
 # = = = = = = = = = = = = = = =
 
