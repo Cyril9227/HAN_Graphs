@@ -38,7 +38,7 @@ def bidir_gru(my_seq, n_units, is_GPU,  merge_mode='concat'):
                                  merge_mode='concat', weights=None)(my_seq)
 
 
-def make_model(n_units, merge_mode, drop_rate, drop_rate_emb, att_cosine, att_activation, use_fc_layer, embeddings, docs_train, is_GPU):
+def make_model_tgt1(n_units, merge_mode, drop_rate, drop_rate_emb, att_cosine, att_activation, use_fc_layer, embeddings, docs_train, is_GPU):
     
     '''
     Convenient wrapper for generating same model for training and inference 

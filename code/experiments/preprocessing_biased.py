@@ -64,10 +64,6 @@ def create_documents(target, sent_max, sent_l_law, sent_l_stats, word_rate, p, q
         
         # create the pseudo-document representation of the graph
         docs.append(doc)
-        
-        # progress tracking
-        if idx % 15000 == 0:
-            print(idx)
 
     print('documents generated for target', target)
     
@@ -81,4 +77,4 @@ def create_documents(target, sent_max, sent_l_law, sent_l_stats, word_rate, p, q
     np.save(path_to_data + 'documents_' + str(target) + '.npy', docs, allow_pickle=False)
 
     print('documents saved for target', target)
-    print('everything done in', str(round(time() - start_time, 2)) + 's')
+    print('everything done in', str(round(time() - start_time, 2)) + 's', '\n')
