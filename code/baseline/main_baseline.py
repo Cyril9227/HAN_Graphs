@@ -1,4 +1,3 @@
-import os
 import sys
 import json
 import numpy as np
@@ -14,8 +13,8 @@ is_GPU = True
 save_weights = True
 save_history = True
 
-path_root = os.path.dirname(os.path.dirname(os.path.abspath('').replace('\\', '/')))
-path_to_code = path_root + '/repo/code'
+path_root = # fill me!
+path_to_code = path_root + '/code/'
 path_to_data = path_root + '/data/'
 
 sys.path.insert(0, path_to_code)
@@ -24,7 +23,7 @@ sys.path.insert(0, path_to_code)
 
 from AttentionWithContext import AttentionWithContext
 
-def bidir_gru(my_seq, n_units, is_GPU):
+def bidir_gru(my_seq,n_units,is_GPU):
     '''
     just a convenient wrapper for bidirectional RNN with GRU units
     enables CUDA acceleration on GPU
@@ -99,10 +98,10 @@ for tgt in range(4):
                         )(sent_ints)
 
     sent_wv_dr = Dropout(drop_rate)(sent_wv)
-    sent_wa = bidir_gru(sent_wv_dr, n_units, is_GPU)
-    sent_att_vec, word_att_coeffs = AttentionWithContext(return_coefficients=True)(sent_wa)
+    sent_wa = bidir_gru(sent_wv_dr,n_units,is_GPU)
+    sent_att_vec,word_att_coeffs = AttentionWithContext(return_coefficients=True)(sent_wa)
     sent_att_vec_dr = Dropout(drop_rate)(sent_att_vec)                      
-    sent_encoder = Model(sent_ints, sent_att_vec_dr)
+    sent_encoder = Model(sent_ints,sent_att_vec_dr)
 
     doc_ints = Input(shape=(docs_train.shape[1],docs_train.shape[2],))
     sent_att_vecs_dr = TimeDistributed(sent_encoder)(doc_ints)
@@ -111,8 +110,8 @@ for tgt in range(4):
     doc_att_vec_dr = Dropout(drop_rate)(doc_att_vec)
 
     preds = Dense(units=1,
-                  activation='linear')(doc_att_vec_dr)
-    model = Model(doc_ints, preds)
+                  activation='sigmoid')(doc_att_vec_dr)
+    model = Model(doc_ints,preds)
 
     model.compile(loss='mean_squared_error',
                   optimizer=my_optimizer,
@@ -150,5 +149,5 @@ for tgt in range(4):
         with open(path_to_data + 'model_history_' + str(tgt) + '.json', 'w') as file:
             json.dump(hist, file, sort_keys=False, indent=4)
 
-    print('* * * * * * * target', tgt, 'done * * * * * * *')    
+    print('* * * * * * * target',tgt,'done * * * * * * *')    
     
