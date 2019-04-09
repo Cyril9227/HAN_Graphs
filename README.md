@@ -1,4 +1,4 @@
-# HAN_Graphs
+# Hierarchical Attention Network (HAN) applied to Graphs
 The goal of this project is to apply the deep learning [HAN](https://www.cs.cmu.edu/~diyiy/docs/naacl16.pdf) architecture to solve a multi-target graph regression problem. 
 
 This project is part of the [Altegrad Data Challenge](https://www.kaggle.com/c/altegrad-19) organized in the [Paris Saclay's Data Science Master 2](https://datascience-x-master-paris-saclay.fr/).
